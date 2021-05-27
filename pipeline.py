@@ -30,10 +30,20 @@ def create(name):
             """
 
         @schema
+        class DeconvolveStart(dj.Computed):
+            definition = """
+            -> Acquisition
+            -> DeconvolveParams
+            """
+
+            def make(self, key):
+                self.insert1(key)
+
+        @schema
         class Deconvolve(ParamsMixin, dj.Computed):
             definition = """
+            -> DeconvolveStart
             -> Image
-            -> DeconvolveParams
             """
 
             def make(self, key):
@@ -48,9 +58,8 @@ def create(name):
         @schema
         class PreprocessStart(ParamsMixin, dj.Computed):
             definition = """
-            -> Acquisition
+            -> DeconvolveStart
             -> PreprocessParams
-            -> DeconvolveParams
             """
 
             def make(self, key):

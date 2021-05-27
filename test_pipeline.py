@@ -70,6 +70,16 @@ def test_populate(m):
         ]
     )
 
+    m.DeconvolveStart.populate()
+    deconvolve_start = m.DeconvolveStart.fetch()
+    np.testing.assert_equal(
+        deconvolve_start,
+        np.array(
+            [("acq_0", "deconvolve_0"), ("acq_1", "deconvolve_0")],
+            dtype=[("acquisition_name", "O"), ("deconvolve_params_name", "O")],
+        ),
+    )
+
     m.Deconvolve.populate()
 
     deconvolve = m.Deconvolve.fetch()
