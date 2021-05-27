@@ -24,6 +24,22 @@ def create(name):
             """
 
         @schema
+        class DeconvolveParams(dj.Manual):
+            definition = """
+            deconvolve_params_name: varchar(100)
+            """
+
+        @schema
+        class Deconvolve(ParamsMixin, dj.Computed):
+            definition = """
+            -> Image
+            -> DeconvolveParams
+            """
+
+            def make(self, key):
+                self.insert1(key)
+
+        @schema
         class PreprocessParams(dj.Manual):
             definition = """
             preprocess_params_name: varchar(100)
@@ -34,6 +50,7 @@ def create(name):
             definition = """
             -> Acquisition
             -> PreprocessParams
+            -> DeconvolveParams
             """
 
             def make(self, key):
@@ -42,7 +59,7 @@ def create(name):
         @schema
         class Preprocess(dj.Computed):
             definition = """
-            -> Image
+            -> Deconvolve
             -> PreprocessStart
             """
 
@@ -92,6 +109,7 @@ def create(name):
             definition = """
             params_set_name: varchar(100)
             ---
+            -> [nullable] DeconvolveParams
             -> [nullable] PreprocessParams
             -> [nullable] AnalyzeParams
             """

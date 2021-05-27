@@ -15,6 +15,7 @@ def m():
 
 
 def test_populate(m):
+    m.DeconvolveParams.insert1({"deconvolve_params_name": "deconvolve_0"})
     m.PreprocessParams.insert1({"preprocess_params_name": "preprocess_0"})
     m.PreprocessParams.insert1({"preprocess_params_name": "preprocess_1"})
     m.AnalyzeParams.insert1({"analyze_params_name": "analyze_0"})
@@ -23,17 +24,20 @@ def test_populate(m):
     m.ParamsSet.insert(
         [
             {
-                "params_set_name": "params_set_00",
+                "params_set_name": "params_set_000",
+                "deconvolve_params_name": "deconvolve_0",
                 "preprocess_params_name": "preprocess_0",
                 "analyze_params_name": "analyze_0",
             },
             {
-                "params_set_name": "params_set_01",
+                "params_set_name": "params_set_001",
+                "deconvolve_params_name": "deconvolve_0",
                 "preprocess_params_name": "preprocess_0",
                 "analyze_params_name": "analyze_1",
             },
             {
-                "params_set_name": "params_set_10",
+                "params_set_name": "params_set_010",
+                "deconvolve_params_name": "deconvolve_0",
                 "preprocess_params_name": "preprocess_1",
                 "analyze_params_name": "analyze_0",
             },
@@ -53,17 +57,38 @@ def test_populate(m):
         [
             {
                 "acquisition_name": "acq_0",
-                "params_set_name": "params_set_00",
+                "params_set_name": "params_set_000",
             },
             {
                 "acquisition_name": "acq_0",
-                "params_set_name": "params_set_01",
+                "params_set_name": "params_set_001",
             },
             {
                 "acquisition_name": "acq_1",
-                "params_set_name": "params_set_10",
+                "params_set_name": "params_set_010",
             },
         ]
+    )
+
+    m.Deconvolve.populate()
+
+    deconvolve = m.Deconvolve.fetch()
+    np.testing.assert_equal(
+        deconvolve,
+        np.array(
+            [
+                ("acq_0", 0, "deconvolve_0"),
+                ("acq_0", 1, "deconvolve_0"),
+                ("acq_1", 0, "deconvolve_0"),
+                ("acq_1", 1, "deconvolve_0"),
+                ("acq_1", 2, "deconvolve_0"),
+            ],
+            dtype=[
+                ("acquisition_name", "O"),
+                ("rnd", "<i8"),
+                ("deconvolve_params_name", "O"),
+            ],
+        ),
     )
 
     m.PreprocessStart.populate()
@@ -72,8 +97,15 @@ def test_populate(m):
     np.testing.assert_equal(
         preprocess_start,
         np.array(
-            [("acq_0", "preprocess_0"), ("acq_1", "preprocess_1")],
-            dtype=[("acquisition_name", "O"), ("preprocess_params_name", "O")],
+            [
+                ("acq_0", "deconvolve_0", "preprocess_0"),
+                ("acq_1", "deconvolve_0", "preprocess_1"),
+            ],
+            dtype=[
+                ("acquisition_name", "O"),
+                ("deconvolve_params_name", "O"),
+                ("preprocess_params_name", "O"),
+            ],
         ),
     )
 
@@ -82,15 +114,16 @@ def test_populate(m):
     preprocess = m.Preprocess.fetch()
     preprocess_expected = np.array(
         [
-            ("acq_0", 0, "preprocess_0"),
-            ("acq_0", 1, "preprocess_0"),
-            ("acq_1", 0, "preprocess_1"),
-            ("acq_1", 1, "preprocess_1"),
-            ("acq_1", 2, "preprocess_1"),
+            ("acq_0", 0, "deconvolve_0", "preprocess_0"),
+            ("acq_0", 1, "deconvolve_0", "preprocess_0"),
+            ("acq_1", 0, "deconvolve_0", "preprocess_1"),
+            ("acq_1", 1, "deconvolve_0", "preprocess_1"),
+            ("acq_1", 2, "deconvolve_0", "preprocess_1"),
         ],
         dtype=[
             ("acquisition_name", "O"),
             ("rnd", "<i8"),
+            ("deconvolve_params_name", "O"),
             ("preprocess_params_name", "O"),
         ],
     )
@@ -100,22 +133,30 @@ def test_populate(m):
 
     preprocess_done = m.PreprocessDone.fetch()
     preprocess_done_expected = np.array(
-        [("acq_0", "preprocess_0"), ("acq_1", "preprocess_1")],
-        dtype=[("acquisition_name", "O"), ("preprocess_params_name", "O")],
+        [
+            ("acq_0", "deconvolve_0", "preprocess_0"),
+            ("acq_1", "deconvolve_0", "preprocess_1"),
+        ],
+        dtype=[
+            ("acquisition_name", "O"),
+            ("deconvolve_params_name", "O"),
+            ("preprocess_params_name", "O"),
+        ],
     )
     np.testing.assert_equal(preprocess_done, preprocess_done_expected)
 
     preprocess_done_part = m.PreprocessDone.Part.fetch()
     preprocess_done_part_expected = np.array(
         [
-            ("acq_0", "preprocess_0", 0),
-            ("acq_0", "preprocess_0", 1),
-            ("acq_1", "preprocess_1", 0),
-            ("acq_1", "preprocess_1", 1),
-            ("acq_1", "preprocess_1", 2),
+            ("acq_0", "deconvolve_0", "preprocess_0", 0),
+            ("acq_0", "deconvolve_0", "preprocess_0", 1),
+            ("acq_1", "deconvolve_0", "preprocess_1", 0),
+            ("acq_1", "deconvolve_0", "preprocess_1", 1),
+            ("acq_1", "deconvolve_0", "preprocess_1", 2),
         ],
         dtype=[
             ("acquisition_name", "O"),
+            ("deconvolve_params_name", "O"),
             ("preprocess_params_name", "O"),
             ("rnd", "<i8"),
         ],
@@ -127,12 +168,13 @@ def test_populate(m):
     analyze = m.Analyze.fetch()
     analyze_expected = np.array(
         [
-            ("acq_0", "preprocess_0", "analyze_0"),
-            ("acq_1", "preprocess_1", "analyze_0"),
-            ("acq_0", "preprocess_0", "analyze_1"),
+            ("acq_0", "deconvolve_0", "preprocess_0", "analyze_0"),
+            ("acq_1", "deconvolve_0", "preprocess_1", "analyze_0"),
+            ("acq_0", "deconvolve_0", "preprocess_0", "analyze_1"),
         ],
         dtype=[
             ("acquisition_name", "O"),
+            ("deconvolve_params_name", "O"),
             ("preprocess_params_name", "O"),
             ("analyze_params_name", "O"),
         ],
